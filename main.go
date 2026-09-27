@@ -1,13 +1,28 @@
 package main
 
 import (
-	"fmt";
+	"fmt"
 	"os"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/huh"
 )
 
 func main() {
-	var file string 
+	var file string
+
+	keyMap := huh.NewDefaultKeyMap()
+
+	keyMap.Text.NewLine = key.NewBinding(
+		key.WithKeys("enter"),
+	)
+	keyMap.Text.Submit = key.NewBinding(
+		key.WithKeys("alt+enter"),
+		key.WithHelp("alt+enter", "to close"),
+	)
+
+	keyMap.Text.Next = key.NewBinding(key.WithDisabled())
+	keyMap.Text.Prev = key.NewBinding(key.WithDisabled())
+	keyMap.Text.Editor = key.NewBinding(key.WithDisabled())
 
 		filepicker := huh.NewForm(
 		huh.NewGroup(
@@ -16,7 +31,7 @@ func main() {
 			Value(&file), 
 		),
 	).WithTheme(huh.ThemeBase())
-    		
+
 	filepicker.Run()
 
 	var content string
@@ -36,17 +51,36 @@ func main() {
 		huh.NewGroup(
 			huh.NewText().
 			Title("\033[1mEditing "+file+"...\033[22m").
+			Lines(15).
 			Value(&content),
 		),
-	).WithTheme(huh.ThemeBase())
+	).WithTheme(huh.ThemeBase()).
+	 WithKeyMap(keyMap)
 
 	slate.Run()
 
-	err = os.WriteFile(file, []byte(content+"\n"), 0644)
-	if err == nil {
-		fmt.Print("\033[1m✔ "+file+" has been saved\n\033[22m")
+	var save bool
 
+	choice := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+			Title("\033[1mSave the file?\n\033[22m").
+			Value(&save),
+		),
+	).WithTheme(huh.ThemeBase())
+
+	choice.Run()
+
+	if save {
+		err = os.WriteFile(file, []byte(content+"\n"), 0644)
+		if err == nil {
+			fmt.Print("\033[1m✔ "+file+" has been saved\n\033[22m")
+ 
+		} else {
+			fmt.Print("\033[1m✗ error "+file+" cannot be saved\n\033[22m")
+		}
 	} else {
-		fmt.Print("\033[1m✗ error "+file+"wasn't saved\n\033[22m")
+		fmt.Print("\033[1m✔ "+file+" has been succesfully discarded\n\033[22m")
 	}
 }
+
