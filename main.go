@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/huh"
 )
@@ -24,11 +25,11 @@ func main() {
 	keyMap.Text.Prev = key.NewBinding(key.WithDisabled())
 	keyMap.Text.Editor = key.NewBinding(key.WithDisabled())
 
-		filepicker := huh.NewForm(
+	filepicker := huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
-			Title("\033[1mTargeted file :\033[22m").
-			Value(&file), 
+				Title("\033[1mTargeted file :\033[22m").
+				Value(&file),
 		),
 	).WithTheme(huh.ThemeBase())
 
@@ -45,42 +46,56 @@ func main() {
 		}
 	} else {
 		content = ""
+		var new bool
+		new_choice := huh.NewForm(
+			huh.NewGroup(
+				huh.NewConfirm().
+					Title("\033[1m" + file + " does not exist, create it?\n\033[22m").
+					Value(&new),
+			),
+		).WithTheme(huh.ThemeBase())
+
+		new_choice.Run()
+
+		if !new {
+			fmt.Print("\033[1m✔ slate has been succesfully aborted\n\033[22m")
+			return
+		}
 	}
 
-		slate := huh.NewForm(
+	slate := huh.NewForm(
 		huh.NewGroup(
 			huh.NewText().
-			Title("\033[1mEditing "+file+"...\033[22m").
-			Lines(15).
-			Value(&content),
+				Title("\033[1mEditing " + file + "...\033[22m").
+				Lines(15).
+				Value(&content),
 		),
 	).WithTheme(huh.ThemeBase()).
-	 WithKeyMap(keyMap)
+		WithKeyMap(keyMap)
 
 	slate.Run()
 
 	var save bool
 
-	choice := huh.NewForm(
+	save_choice := huh.NewForm(
 		huh.NewGroup(
 			huh.NewConfirm().
-			Title("\033[1mSave the file?\n\033[22m").
-			Value(&save),
+				Title("\033[1mSave the file?\n\033[22m").
+				Value(&save),
 		),
 	).WithTheme(huh.ThemeBase())
 
-	choice.Run()
+	save_choice.Run()
 
 	if save {
 		err = os.WriteFile(file, []byte(content+"\n"), 0644)
 		if err == nil {
-			fmt.Print("\033[1m✔ "+file+" has been saved\n\033[22m")
- 
+			fmt.Print("\033[1m✔ " + file + " has been saved\n\033[22m")
+
 		} else {
-			fmt.Print("\033[1m✗ error "+file+" cannot be saved\n\033[22m")
+			fmt.Print("\033[1m✗ error " + file + " cannot be saved\n\033[22m")
 		}
 	} else {
-		fmt.Print("\033[1m✔ "+file+" has been succesfully discarded\n\033[22m")
+		fmt.Print("\033[1m✔ " + file + " has been succesfully discarded\n\033[22m")
 	}
 }
-
